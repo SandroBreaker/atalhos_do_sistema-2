@@ -1,0 +1,159 @@
+﻿{
+  "ok": true,
+  "executionId": "8b7cba3c-7a66-4d9c-b1e3-96fb94402ce9",
+  "executionMode": "local",
+  "routeMode": "executor",
+  "extractionMode": "full",
+  "documentMode": "full",
+  "executorTarget": "IA Generativa (GenAI)",
+  "generatedAt": "2026-09-05T11:30:02.1071107Z",
+  "durationMs": 6991,
+  "sourceArtifactPath": "",
+  "sourceArtifactHash": null,
+  "outputPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts/_meta-prompt_bundle_executor__atalhos_do_sistema.md",
+  "outputHash": "1bb10e25ce25a5eef30d50e540df1a35fb8dd0606a8004f958f3b0b80603ea03",
+  "resultMetaPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts/_generated_logs/_meta-prompt_bundle_executor__atalhos_do_sistema.json",
+  "generatedLocally": true,
+  "environment": {
+    "osVersion": "Unix 7.0.0.31",
+    "psVersion": "7.4.6",
+    "isWindows": false,
+    "hostname": "sandro-MW-G31T-M7",
+    "processArchitecture": "X64"
+  },
+  "user": {
+    "username": "sandro",
+    "domain": null,
+    "homeDirectory": "/home/sandro"
+  },
+  "generatedFromLocalGovernance": true,
+  "unselectedFileCount": 0,
+  "sourceArtifactFile": "_bundle_executor__atalhos_do_sistema.md",
+  "resolvedWorkingPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema",
+  "stepAudit": [
+    {
+      "startedAt": "2026-09-05T11:30:01.1670883Z",
+      "finishedAt": "2026-09-05T11:30:01.2326998Z",
+      "fallbackUsed": false,
+      "durationMs": 66,
+      "status": "completed",
+      "outputSummary": "7 file(s) available in current pipeline state",
+      "stepId": "discover_files"
+    },
+    {
+      "startedAt": "2026-09-05T11:30:01.2868011Z",
+      "finishedAt": "2026-09-05T11:30:01.4766782Z",
+      "fallbackUsed": false,
+      "durationMs": 190,
+      "status": "completed",
+      "outputSummary": "0 file(s) with extractable signatures",
+      "stepId": "extract_signatures"
+    },
+    {
+      "startedAt": "2026-09-05T11:30:01.4796123Z",
+      "finishedAt": "2026-09-05T11:30:01.5459523Z",
+      "fallbackUsed": false,
+      "durationMs": 66,
+      "status": "completed",
+      "outputSummary": "bundle already materialized (65881 chars)",
+      "stepId": "build_bundle"
+    },
+    {
+      "startedAt": "2026-09-05T11:30:01.6020161Z",
+      "finishedAt": "2026-09-05T11:30:01.6719610Z",
+      "fallbackUsed": false,
+      "durationMs": 70,
+      "status": "completed",
+      "outputSummary": "existing deterministic meta-prompt reused",
+      "stepId": "build_meta_prompt"
+    },
+    {
+      "startedAt": "2026-09-05T11:30:01.7243913Z",
+      "finishedAt": "2026-09-05T11:30:01.7990978Z",
+      "fallbackUsed": false,
+      "durationMs": 75,
+      "status": "completed",
+      "outputSummary": "bundle/meta prompt validated",
+      "stepId": "validate_result"
+    },
+    {
+      "startedAt": "2026-09-05T11:30:01.8465826Z",
+      "finishedAt": "2026-09-05T11:30:01.9165843Z",
+      "fallbackUsed": false,
+      "durationMs": 70,
+      "status": "completed",
+      "outputSummary": "existing artifacts preserved",
+      "stepId": "save_artifacts"
+    }
+  ],
+  "outputArtifactFile": "_meta-prompt_bundle_executor__atalhos_do_sistema.md",
+  "effectiveOutputDirectory": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts",
+  "originalInput": ".",
+  "sourceMode": "local",
+  "fileCount": 7,
+  "executionFlow": {
+    "flowId": "full_executor",
+    "durationMs": 818,
+    "steps": [
+      {
+        "startedAt": "2026-09-05T11:30:01.1670883Z",
+        "finishedAt": "2026-09-05T11:30:01.2326998Z",
+        "fallbackUsed": false,
+        "durationMs": 66,
+        "status": "completed",
+        "outputSummary": "7 file(s) available in current pipeline state",
+        "stepId": "discover_files"
+      },
+      {
+        "startedAt": "2026-09-05T11:30:01.2868011Z",
+        "finishedAt": "2026-09-05T11:30:01.4766782Z",
+        "fallbackUsed": false,
+        "durationMs": 190,
+        "status": "completed",
+        "outputSummary": "0 file(s) with extractable signatures",
+        "stepId": "extract_signatures"
+      },
+      {
+        "startedAt": "2026-09-05T11:30:01.4796123Z",
+        "finishedAt": "2026-09-05T11:30:01.5459523Z",
+        "fallbackUsed": false,
+        "durationMs": 66,
+        "status": "completed",
+        "outputSummary": "bundle already materialized (65881 chars)",
+        "stepId": "build_bundle"
+      },
+      {
+        "startedAt": "2026-09-05T11:30:01.6020161Z",
+        "finishedAt": "2026-09-05T11:30:01.6719610Z",
+        "fallbackUsed": false,
+        "durationMs": 70,
+        "status": "completed",
+        "outputSummary": "existing deterministic meta-prompt reused",
+        "stepId": "build_meta_prompt"
+      },
+      {
+        "startedAt": "2026-09-05T11:30:01.7243913Z",
+        "finishedAt": "2026-09-05T11:30:01.7990978Z",
+        "fallbackUsed": false,
+        "durationMs": 75,
+        "status": "completed",
+        "outputSummary": "bundle/meta prompt validated",
+        "stepId": "validate_result"
+      },
+      {
+        "startedAt": "2026-09-05T11:30:01.8465826Z",
+        "finishedAt": "2026-09-05T11:30:01.9165843Z",
+        "fallbackUsed": false,
+        "durationMs": 70,
+        "status": "completed",
+        "outputSummary": "existing artifacts preserved",
+        "stepId": "save_artifacts"
+      }
+    ],
+    "startedAt": "2026-09-05T11:30:01.1540934Z",
+    "status": "completed",
+    "sourcePath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/VibeToolkit/flows/full_executor.flow.json",
+    "finishedAt": "2026-09-05T11:30:01.9718417Z",
+    "fallbackCount": 0
+  }
+}

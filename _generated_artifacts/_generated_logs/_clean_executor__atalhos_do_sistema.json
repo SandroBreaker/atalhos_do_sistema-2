@@ -1,0 +1,38 @@
+﻿{
+  "ok": true,
+  "executionId": "dd8f1d5a-e3f3-40d6-bc25-798c0bf67453",
+  "executionMode": "local",
+  "routeMode": "executor",
+  "extractionMode": "clean_export",
+  "documentMode": "clean_export",
+  "executorTarget": "IA Generativa (GenAI)",
+  "generatedAt": "2026-09-05T11:30:17.5671240Z",
+  "durationMs": 4679,
+  "sourceArtifactPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts/_clean_executor__atalhos_do_sistema.md",
+  "sourceArtifactHash": "a05d17bc2e20e800a3abc85a86ed384a201f78b1a0f5418af330232bfce5cb8f",
+  "outputPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts/_clean_executor__atalhos_do_sistema.md",
+  "outputHash": "a05d17bc2e20e800a3abc85a86ed384a201f78b1a0f5418af330232bfce5cb8f",
+  "resultMetaPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts/_generated_logs/_clean_executor__atalhos_do_sistema.json",
+  "generatedLocally": true,
+  "environment": {
+    "osVersion": "Unix 7.0.0.31",
+    "psVersion": "7.4.6",
+    "isWindows": false,
+    "hostname": "sandro-MW-G31T-M7",
+    "processArchitecture": "X64"
+  },
+  "user": {
+    "username": "sandro",
+    "domain": null,
+    "homeDirectory": "/home/sandro"
+  },
+  "generatedFromLocalGovernance": true,
+  "unselectedFileCount": 0,
+  "sourceArtifactFile": "_clean_executor__atalhos_do_sistema.md",
+  "resolvedWorkingPath": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema",
+  "outputArtifactFile": "_clean_executor__atalhos_do_sistema.md",
+  "effectiveOutputDirectory": "/media/sandro/Storage/04_Projetos_e_Codigo/Pastas_Projeto/atalhos_do_sistema/_generated_artifacts",
+  "originalInput": ".",
+  "sourceMode": "local",
+  "fileCount": 7
+}
