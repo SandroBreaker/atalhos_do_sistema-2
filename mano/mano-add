@@ -1,0 +1,783 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+
+MANO_HOME="$HOME/.mano"
+ALIAS_FILE="$MANO_HOME/aliases.sh"
+CATEGORY_DIR="$MANO_HOME/categories"
+MAIN_ALIAS_FILE="$HOME/.bash_aliases"
+
+mkdir -p "$MANO_HOME" "$CATEGORY_DIR"
+
+pause() {
+    echo
+    read -rp "Pressione ENTER para continuar..." _
+}
+
+validar_nome() {
+    [[ "$1" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]
+}
+
+carregar_categoria() {
+    local arquivo="$1"
+
+    unset MANO_CUSTOM_NAME
+    unset MANO_CUSTOM_DESC
+    unset MANO_CUSTOM_FUNC
+
+    source "$arquivo" 2>/dev/null
+}
+
+obter_categorias() {
+    local -n _resultado=$1
+
+    _resultado=()
+
+    shopt -s nullglob
+    _resultado=("$CATEGORY_DIR"/*.sh)
+    shopt -u nullglob
+}
+
+criar_alias() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║              ➕ NOVO ALIAS                 ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+    local escolha
+    local nome
+    local func
+    local cat_nome
+    local alias_existente
+
+    obter_categorias categorias
+
+    if (( ${#categorias[@]} == 0 )); then
+        echo "  ❌ Nenhuma categoria encontrada."
+        echo
+        echo "  Crie primeiro uma categoria em:"
+        echo "  2) 📂 Nova categoria"
+        pause
+        return
+    fi
+
+    echo "  Escolha a categoria onde o alias será criado:"
+    echo
+
+    local i=1
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        printf "  %2d) %s\n" \
+            "$i" \
+            "${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+
+        ((i++))
+    done
+
+    echo
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    read -rp "  >> Categoria: " escolha
+
+    if [[ "$escolha" == "0" ]]; then
+        return
+    fi
+
+    if ! [[ "$escolha" =~ ^[0-9]+$ ]] ||
+       (( escolha < 1 || escolha > ${#categorias[@]} )); then
+        echo
+        echo "  ❌ Categoria inválida."
+        pause
+        return
+    fi
+
+    arquivo="${categorias[$((escolha - 1))]}"
+
+    carregar_categoria "$arquivo"
+
+    cat_nome="${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+    func="${MANO_CUSTOM_FUNC:-}"
+
+    if [[ -z "$func" ]]; then
+        echo
+        echo "  ❌ A categoria não possui MANO_CUSTOM_FUNC."
+        pause
+        return
+    fi
+
+    echo
+    echo "  📂 Categoria:"
+    echo "     $cat_nome"
+    echo
+    echo "  🔧 Função associada:"
+    echo "     $func"
+    echo
+
+    read -rp "  Nome do alias: " nome
+
+    if [[ -z "$nome" ]]; then
+        echo
+        echo "  ❌ Nome não pode ficar vazio."
+        pause
+        return
+    fi
+
+    if ! validar_nome "$nome"; then
+        echo
+        echo "  ❌ Nome inválido."
+        echo "     Use letras, números, _ ou -."
+        pause
+        return
+    fi
+
+    # Verifica aliases existentes no arquivo da categoria,
+    # no arquivo global do MANO e no .bash_aliases principal.
+    if grep -Eq "^[[:space:]]*alias[[:space:]]+$nome=" "$arquivo" 2>/dev/null ||
+       grep -Eq "^[[:space:]]*alias[[:space:]]+$nome=" "$ALIAS_FILE" 2>/dev/null ||
+       grep -Eq "^[[:space:]]*alias[[:space:]]+$nome=" "$MAIN_ALIAS_FILE" 2>/dev/null; then
+
+        echo
+        echo "  ❌ O alias '$nome' já existe."
+        pause
+        return
+    fi
+
+    # O alias é gravado DENTRO da categoria.
+    printf '\nalias %s='\''%s'\''\n' "$nome" "$func" >> "$arquivo"
+
+    echo
+    echo "  ✅ Alias criado!"
+    echo
+    echo "     📂 Categoria: $cat_nome"
+    echo "     🔗 Alias:     $nome"
+    echo "     🔧 Destino:   $func"
+    echo
+    echo "  📄 Arquivo:"
+    echo "     $arquivo"
+
+    pause
+}
+
+criar_categoria() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║             📂 NOVA CATEGORIA              ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local nome
+    local desc
+    local slug
+    local arquivo
+    local func
+
+    read -rp "  Nome da categoria: " nome
+
+    if [[ -z "$nome" ]]; then
+        echo
+        echo "  ❌ Nome não pode ficar vazio."
+        pause
+        return
+    fi
+
+    read -rp "  Descrição: " desc
+
+    slug="$(
+        printf '%s' "$nome" |
+        tr '[:upper:]' '[:lower:]' |
+        sed 's/[^a-z0-9_-]/_/g; s/__*/_/g; s/^_//; s/_$//'
+    )"
+
+    if [[ -z "$slug" ]]; then
+        echo
+        echo "  ❌ Não foi possível gerar o identificador."
+        pause
+        return
+    fi
+
+    arquivo="$CATEGORY_DIR/${slug}.sh"
+    func="mano_custom_${slug}"
+
+    if [[ -e "$arquivo" ]]; then
+        echo
+        echo "  ❌ A categoria já existe:"
+        echo "     $arquivo"
+        pause
+        return
+    fi
+
+    cat > "$arquivo" <<CATEGORY_EOF
+#!/usr/bin/env bash
+
+MANO_CUSTOM_NAME="$nome"
+MANO_CUSTOM_DESC="$desc"
+MANO_CUSTOM_FUNC="$func"
+
+$func() {
+    while true; do
+        clear
+
+        echo
+        echo "╔════════════════════════════════════════════╗"
+        printf "║ %-42s ║\n" "$nome"
+        echo "╚════════════════════════════════════════════╝"
+        echo
+
+        echo "  1) 🔧 Testar categoria"
+        echo "  0) ⬅️ Voltar"
+        echo
+
+        read -rp "  >> Escolha: " op
+
+        case "\$op" in
+            1)
+                echo
+                echo "  ✅ Categoria funcionando."
+                echo
+                echo "  📂 Arquivo:"
+                echo "     $arquivo"
+                pause
+                ;;
+            0)
+                return
+                ;;
+            *)
+                echo
+                echo "  ❌ Opção inválida."
+                sleep 1
+                ;;
+        esac
+    done
+}
+CATEGORY_EOF
+
+    chmod +x "$arquivo"
+
+    echo
+    echo "  ✅ Categoria criada:"
+    echo
+    echo "     📂 $nome"
+    echo "     📝 $desc"
+    echo "     🔧 $func"
+    echo
+    echo "  📄 Arquivo:"
+    echo "     $arquivo"
+    echo
+    echo "  ✏️ Abrindo editor..."
+
+    sleep 1
+    nano "$arquivo"
+}
+
+editar_aliases() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║              📝 EDITAR ALIASES             ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    echo "  1) 🧩 ~/.mano/aliases.sh"
+    echo "  2) 🏠 ~/.bash_aliases"
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    local op
+    read -rp "  >> Escolha: " op
+
+    case "$op" in
+        1)
+            nano "$ALIAS_FILE"
+            ;;
+        2)
+            nano "$MAIN_ALIAS_FILE"
+            ;;
+        0)
+            return
+            ;;
+        *)
+            echo
+            echo "  ❌ Opção inválida."
+            sleep 1
+            ;;
+    esac
+}
+
+editar_categoria() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║            📝 EDITAR CATEGORIA             ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+    local escolha
+
+    obter_categorias categorias
+
+    if (( ${#categorias[@]} == 0 )); then
+        echo "  ❌ Nenhuma categoria encontrada."
+        pause
+        return
+    fi
+
+    local i=1
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        printf "  %2d) %s\n" \
+            "$i" \
+            "${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+
+        ((i++))
+    done
+
+    echo
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    read -rp "  >> Escolha: " escolha
+
+    if [[ "$escolha" == "0" ]]; then
+        return
+    fi
+
+    if [[ "$escolha" =~ ^[0-9]+$ ]] &&
+       (( escolha >= 1 && escolha <= ${#categorias[@]} )); then
+
+        nano "${categorias[$((escolha - 1))]}"
+    else
+        echo
+        echo "  ❌ Opção inválida."
+        sleep 1
+    fi
+}
+
+remover_alias() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║             🗑️ REMOVER ALIAS              ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+    local escolha
+
+    obter_categorias categorias
+
+    if (( ${#categorias[@]} == 0 )); then
+        echo "  ❌ Nenhuma categoria encontrada."
+        pause
+        return
+    fi
+
+    echo "  Escolha a categoria:"
+    echo
+
+    local i=1
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        printf "  %2d) %s\n" \
+            "$i" \
+            "${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+
+        ((i++))
+    done
+
+    echo
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    read -rp "  >> Categoria: " escolha
+
+    if [[ "$escolha" == "0" ]]; then
+        return
+    fi
+
+    if ! [[ "$escolha" =~ ^[0-9]+$ ]] ||
+       (( escolha < 1 || escolha > ${#categorias[@]} )); then
+        echo
+        echo "  ❌ Categoria inválida."
+        pause
+        return
+    fi
+
+    arquivo="${categorias[$((escolha - 1))]}"
+
+    carregar_categoria "$arquivo"
+
+    echo
+    echo "  📂 ${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+    echo
+
+    mapfile -t aliases < <(
+        grep -E '^[[:space:]]*alias[[:space:]]+[a-zA-Z_][a-zA-Z0-9_-]*=' "$arquivo"
+    )
+
+    if (( ${#aliases[@]} == 0 )); then
+        echo "  ❌ Nenhum alias nesta categoria."
+        pause
+        return
+    fi
+
+    i=1
+
+    for linha in "${aliases[@]}"; do
+        if [[ "$linha" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_-]*)= ]]; then
+            printf "  %2d) %s\n" "$i" "${BASH_REMATCH[1]}"
+        fi
+        ((i++))
+    done
+
+    echo
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    read -rp "  >> Alias: " escolha
+
+    if [[ "$escolha" == "0" ]]; then
+        return
+    fi
+
+    if ! [[ "$escolha" =~ ^[0-9]+$ ]] ||
+       (( escolha < 1 || escolha > ${#aliases[@]} )); then
+        echo
+        echo "  ❌ Alias inválido."
+        pause
+        return
+    fi
+
+    local linha="${aliases[$((escolha - 1))]}"
+    local nome
+
+    if [[ "$linha" =~ ^[[:space:]]*alias[[:space:]]+([a-zA-Z_][a-zA-Z0-9_-]*)= ]]; then
+        nome="${BASH_REMATCH[1]}"
+    else
+        echo
+        echo "  ❌ Não foi possível identificar o alias."
+        pause
+        return
+    fi
+
+    echo
+    echo "  🗑️ Remover '$nome'?"
+    read -rp "  Confirmar [s/N]: " confirmar
+
+    if [[ "$confirmar" =~ ^[Ss]$ ]]; then
+        sed -i -E "/^[[:space:]]*alias[[:space:]]+$nome=/d" "$arquivo"
+
+        echo
+        echo "  ✅ Alias removido."
+    else
+        echo
+        echo "  ❌ Operação cancelada."
+    fi
+
+    pause
+}
+
+remover_categoria() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║           🗑️ REMOVER CATEGORIA             ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+    local escolha
+
+    obter_categorias categorias
+
+    if (( ${#categorias[@]} == 0 )); then
+        echo "  ❌ Nenhuma categoria encontrada."
+        pause
+        return
+    fi
+
+    local i=1
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        printf "  %2d) %s\n" \
+            "$i" \
+            "${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+
+        ((i++))
+    done
+
+    echo
+    echo "  0) ⬅️ Voltar"
+    echo
+
+    read -rp "  >> Escolha: " escolha
+
+    if [[ "$escolha" == "0" ]]; then
+        return
+    fi
+
+    if [[ "$escolha" =~ ^[0-9]+$ ]] &&
+       (( escolha >= 1 && escolha <= ${#categorias[@]} )); then
+
+        arquivo="${categorias[$((escolha - 1))]}"
+
+        carregar_categoria "$arquivo"
+
+        echo
+        echo "  📂 Categoria:"
+        echo "     ${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+        echo
+
+        read -rp "  Excluir definitivamente? [s/N]: " confirmar
+
+        if [[ "$confirmar" =~ ^[Ss]$ ]]; then
+            rm -f "$arquivo"
+
+            echo
+            echo "  ✅ Categoria removida."
+        else
+            echo
+            echo "  ❌ Operação cancelada."
+        fi
+
+        pause
+    else
+        echo
+        echo "  ❌ Opção inválida."
+        sleep 1
+    fi
+}
+
+listar_aliases() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║              📋 LISTAR ALIASES             ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+    local encontrados=0
+
+    obter_categorias categorias
+
+    echo "  🧩 ALIASES POR CATEGORIA"
+    echo "  ───────────────────────────────────────────"
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        local nome="${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+        local -a aliases_categoria=()
+
+        mapfile -t aliases_categoria < <(
+            grep -E '^[[:space:]]*alias[[:space:]]+' "$arquivo" 2>/dev/null
+        )
+
+        if (( ${#aliases_categoria[@]} > 0 )); then
+            echo
+            echo "  📂 $nome"
+
+            for linha in "${aliases_categoria[@]}"; do
+                echo "     $linha"
+                ((encontrados++))
+            done
+        fi
+    done
+
+    if (( encontrados == 0 )); then
+        echo
+        echo "  Nenhum alias encontrado nas categorias."
+    fi
+
+    echo
+    echo "  🧩 ALIASES GLOBAIS DO MANO"
+    echo "  ───────────────────────────────────────────"
+
+    if [[ -f "$ALIAS_FILE" ]]; then
+        grep -E '^[[:space:]]*alias[[:space:]]+' "$ALIAS_FILE" 2>/dev/null ||
+            echo "  Nenhum alias."
+    else
+        echo "  Arquivo não encontrado."
+    fi
+
+    echo
+    echo "  🏠 ALIASES PRINCIPAIS"
+    echo "  ───────────────────────────────────────────"
+
+    if [[ -f "$MAIN_ALIAS_FILE" ]]; then
+        grep -E '^[[:space:]]*alias[[:space:]]+' "$MAIN_ALIAS_FILE" 2>/dev/null ||
+            echo "  Nenhum alias."
+    else
+        echo "  Arquivo não encontrado."
+    fi
+
+    pause
+}
+
+listar_categorias() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║            📋 LISTAR CATEGORIAS            ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local -a categorias=()
+    local arquivo
+
+    obter_categorias categorias
+
+    if (( ${#categorias[@]} == 0 )); then
+        echo "  ❌ Nenhuma categoria encontrada."
+        pause
+        return
+    fi
+
+    local i=1
+
+    for arquivo in "${categorias[@]}"; do
+        carregar_categoria "$arquivo"
+
+        echo "  $i) ${MANO_CUSTOM_NAME:-$(basename "$arquivo" .sh)}"
+        echo "     ${MANO_CUSTOM_DESC:-Sem descrição}"
+        echo "     Função: ${MANO_CUSTOM_FUNC:-não definida}"
+        echo "     Arquivo: $arquivo"
+        echo
+
+        ((i++))
+    done
+
+    pause
+}
+
+validar() {
+    clear
+
+    echo
+    echo "╔════════════════════════════════════════════╗"
+    echo "║           🧪 VALIDAR CONFIGURAÇÃO          ║"
+    echo "╚════════════════════════════════════════════╝"
+    echo
+
+    local erros=0
+    local arquivo
+
+    if [[ -f "$ALIAS_FILE" ]]; then
+        if bash -n "$ALIAS_FILE"; then
+            echo "  ✅ aliases.sh ................ OK"
+        else
+            echo "  ❌ aliases.sh ................ ERRO"
+            ((erros++))
+        fi
+    fi
+
+    if [[ -f "$MAIN_ALIAS_FILE" ]]; then
+        if bash -n "$MAIN_ALIAS_FILE"; then
+            echo "  ✅ .bash_aliases ............. OK"
+        else
+            echo "  ❌ .bash_aliases ............. ERRO"
+            ((erros++))
+        fi
+    fi
+
+    local -a categorias=()
+
+    obter_categorias categorias
+
+    for arquivo in "${categorias[@]}"; do
+        if bash -n "$arquivo"; then
+            echo "  ✅ $(basename "$arquivo") ........ OK"
+        else
+            echo "  ❌ $(basename "$arquivo") ........ ERRO"
+            ((erros++))
+        fi
+    done
+
+    echo
+
+    if (( erros == 0 )); then
+        echo "  ✅ Configuração válida."
+    else
+        echo "  ❌ $erros erro(s) encontrado(s)."
+    fi
+
+    pause
+}
+
+menu() {
+    while true; do
+        clear
+
+        echo
+        echo "╔════════════════════════════════════════════╗"
+        echo "║           🧩 MANO ADD — NÍVEL 2           ║"
+        echo "╚════════════════════════════════════════════╝"
+        echo
+        echo "  1) ➕ Novo alias"
+        echo "  2) 📂 Nova categoria"
+        echo "  3) 📝 Editar aliases"
+        echo "  4) 📝 Editar categoria"
+        echo "  5) 🗑️ Remover alias"
+        echo "  6) 🗑️ Remover categoria"
+        echo "  7) 📋 Listar aliases"
+        echo "  8) 📋 Listar categorias"
+        echo "  9) 🧪 Validar configuração"
+        echo "  0) 🚪 Sair"
+        echo
+
+        read -rp "  >> Escolha: " op
+
+        case "$op" in
+            1) criar_alias ;;
+            2) criar_categoria ;;
+            3) editar_aliases ;;
+            4) editar_categoria ;;
+            5) remover_alias ;;
+            6) remover_categoria ;;
+            7) listar_aliases ;;
+            8) listar_categorias ;;
+            9) validar ;;
+            0)
+                clear
+                echo
+                echo "  👋 Saindo do MANO ADD."
+                echo
+                return
+                ;;
+            *)
+                echo
+                echo "  ❌ Opção inválida."
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+menu
